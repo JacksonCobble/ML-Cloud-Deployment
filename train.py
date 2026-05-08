@@ -37,11 +37,8 @@ print("Data pulled successfully. Shape:", df.shape)
 # rows "failuretype", "udi", and "product_id" are not relevant to the model
 df = df.drop(columns=["failure_type", "udi", "product_id"])
 
-# use a label encoder to convert the "type" column (low, medium, high product quality)
-# into numerical values, can use standard labelencoder because random forests do not care 
-# about the numeric distance between encoded values
-le = LabelEncoder()
-df["type"] = le.fit_transform(df["type"])
+# map categorical "type" values to something the random model can use
+df["type"] = df["type"].map({"L": 0, "M": 1, "H": 2})
 
 # get features and target values
 X = df.drop(columns=["target"])
