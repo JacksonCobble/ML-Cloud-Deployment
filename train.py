@@ -1,15 +1,17 @@
+# STDLIB
+import os
+
+# Environment
+from dotenv import load_dotenv
+
 # Data / IO
 import pandas as pd
 from sqlalchemy import create_engine
-from dotenv import load_dotenv
-import os
 
 # ML / Modeling
-from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score
-import joblib
 
 # Experiment Tracking / Logging
 import mlflow
@@ -20,7 +22,7 @@ load_dotenv()
 # get the database URL from environment variables
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# DagsHub/MLFlow config - set the URI and the username /token will be setup automatically from .env
+# DagsHub/MLFlow config - set the URI and the username / password token will be setup automatically from .env
 mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI"))
 mlflow.set_experiment("Predictive Maintenance")
 
