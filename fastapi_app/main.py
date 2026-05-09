@@ -12,7 +12,11 @@ from pydantic import BaseModel
 import pandas as pd
 
 # Database
-import psycopg
+# using psycopg instead of sqlalchemy (which is just a wrapper for psycopg2 because
+# since this is going to be on a server that taken in queries we want it to be as lean
+# as possible aka minimum overhead
+import psycopg 
+
 
 # Experiment Tracking / Model Registry
 import mlflow
