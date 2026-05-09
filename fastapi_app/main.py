@@ -28,11 +28,17 @@ dagshub.init(repo_owner=os.getenv("MLFLOW_TRACKING_USERNAME"), repo_name="ML-Clo
 # set the URI and the username / password token will be setup automatically from .env
 mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI"))
 
-# load model from mlflow model registry
-model_name = os.getenv("MLFLOW_MODEL_NAME")
-# this string is formatted to take the generic model name and pull the one that has its alias set on mlflow as "champion"
-model_uri = f"models:/{model_name}/2"
-model = mlflow.sklearn.load_model(model_uri)
+# load model at startup
+model = None
+try:
+    model_name = os.getenv("MLFLOW_MODEL_NAME")
+    # this string is formatted to take the generic model name and pull the one that is version "2".
+    # for some reason trying to get the alias "@champion" does not work.
+    model_uri = f"models:/{model_name}/2"
+    model = mlflow.sklearn.load_model(model_uri)
+    print("Model loaded successfully!")
+except Exception as e:
+    print(f"Model loading failure: {e}")
 
 # encoding for the categorical "type" feature
 TYPE_MAP = {"L": 0, "M": 1, "H": 2}
@@ -64,6 +70,10 @@ def predict(data: SensorData):
     if data.type not in TYPE_MAP:
         # status code 400 - bad request, data being sent is not valid.
         raise HTTPException(status_code=400, detail="Invalid type. Must be one of 'L', 'M', or 'H'.")
+    # make sure model loaded successfully
+    if model is None:
+        # status code 503 - service unavailable, api running but model service is out
+        raise HTTPException(status_code=503, detail="Model not available. Try again later.")
     
     # transform data into a form that the model can use
     # IMPORTANT: the format of the actual features being sent needs to be in the EXACT for that the model was originally trained on.
@@ -78,9 +88,45 @@ def predict(data: SensorData):
     }])
 
     # run prediction on model
-    prediction = int(model.predict(features)[0])
-    probability = float(model.predict_proba(features)[0][1])
-    label = "Failure" if prediction == 1 else "No Failure"
+    try:
+        prediction = int(model.predict(features)[0])
+        probability = float(model.predict_proba(features)[0][1])
+        label = "Failure" if prediction == 1 else "No Failure"
+    except Exception as e:
+        # status code 500- internal service error. the request worked fine, theres just something wrong with the algorithm its calling.
+        raise HTTPException(status_code=500, detail="Prediction failed")
+
+    # log info back to our database in a new table "predictions"
+    try:
+        # psyopg2 lets us connect to a database and send it SQL
+        conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+        # cursor is the object that is capable of talking to the sql server
+        cur = conn.cursor()
+        # execute this SQL into the database
+        cur.execute("""
+            INSERT INTO predictions (
+                type, air_temperature, process_temperature,
+                rotational_speed, torque, tool_wear,
+                prediction, prediction_label, probability_failure
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            TYPE_MAP[data.type],
+            data.air_temperature,
+            data.process_temperature,
+            data.rotational_speed,
+            data.torque,
+            data.tool_wear,
+            prediction,
+            label,
+            probability
+        ))
+        # changes are temporary until committed like a repo, so you need to commit the changes to the database
+        conn.commit()
+        # close sql worker and hang up db connection
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Supabase logging error: {e}")
 
     # return the prediction and probability
     return {
