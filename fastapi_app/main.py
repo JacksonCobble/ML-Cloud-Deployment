@@ -12,7 +12,7 @@ from pydantic import BaseModel
 import pandas as pd
 
 # Database
-import psycopg2
+import psycopg
 
 # Experiment Tracking / Model Registry
 import mlflow
@@ -99,7 +99,7 @@ def predict(data: SensorData):
     # log info back to our database in a new table "predictions"
     try:
         # psyopg2 lets us connect to a database and send it SQL
-        conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+        conn = psycopg.connect(os.getenv("DATABASE_URL"))
         # cursor is the object that is capable of talking to the sql server
         cur = conn.cursor()
         # execute this SQL into the database

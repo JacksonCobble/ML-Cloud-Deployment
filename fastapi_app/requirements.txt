@@ -3,6 +3,6 @@ uvicorn
 mlflow
 dagshub
 scikit-learn
-psyopg[binary]>=3.1.0
+psycopg[binary]>=3.1.0
 python-dotenv
 pydantic
