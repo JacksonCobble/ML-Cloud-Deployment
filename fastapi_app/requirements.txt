@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+mlflow
+dagshub
+scikit-learn
+psycopg[binary]>=3.1.0
+python-dotenv
+pydantic
