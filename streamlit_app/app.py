@@ -5,7 +5,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-FASTAPI_URL = os.getenv("FASTAPI_URL")
+# use this line if running locally
+# FASTAPI_URL = os.getenv("FASTAPI_URL")
+# uploaded to streamlit community- using st.secrets instead of .env setup
+FASTAPI_URL = st.secrets["FASTAPI_URL"]
 
 # note- page_title in this config is the title in thr browser tab
 st.set_page_config(page_title="Predictive Maintanence", layout="wide")
@@ -21,7 +24,7 @@ st.write("Enter sensor readings to predict equipment failure.")
 # note for machine type- we have to convert the text in the select box to the character L M or H so you 
 # can pass in a lambda to mask what the actual value is behind the selection
 machine_type = st.selectbox(
-    "Machine Type",
+    "Machine Quality Type",
     options=["L", "M", "H"],
     format_func=lambda x: {"L": "Low (L)", "M": "Medium (M)", "H": "High (H)"}[x]
 )
@@ -43,11 +46,17 @@ if st.button("Predict", type="primary"):
         "tool_wear": int(tool_wear),
     }
 
+    # st spinner shows a loading animation while the request runs
     with st.spinner("Running prediction..."):
         try:
             response = requests.post(f"{FASTAPI_URL}/predict", json=payload, timeout=60)
+            # this gets all 400 and 500 errors and returns exceptions so i can
+            # add exception handling to this to read errors
             response.raise_for_status()
+            # storing in result makes it stay on screen until i press the button for another prediction again
             st.session_state.result = response.json()
+
+        # if i get a timeout we need to halt the request so it doesnt load forever
         except requests.exceptions.Timeout:
             st.error("Request timed out — the API may be cold-starting. Try again.")
             st.stop()
@@ -55,16 +64,14 @@ if st.button("Predict", type="primary"):
             st.error(f"API error: {e}")
             st.stop()
 
+# check if there is a result in session state (aka the result of the last time predict was pressed)
+# note: EVERY TIME YOU INTERACT, THE WHOLE SCRIPT GETS RERUN- so session state will hold values even on a re run
 if "result" in st.session_state:
     result = st.session_state.result
     label = result["label"]
     prob = result["probability"]
 
-    if result["prediction"] == 0:
-        st.success(f"✅ {label}")
-    else:
-        st.warning(f"⚠️ {label}")
-
+    # log two metrics in columns with their info
     col1, col2 = st.columns(2)
     with col1:
         st.metric("Result", label)
