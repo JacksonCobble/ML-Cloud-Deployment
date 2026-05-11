@@ -1,7 +1,11 @@
 # ML Cloud Deployment - Predictive Maintanence
 
 A full stack, cloud deployed machine learning application that predicts equipment failure from sensor readings. 
-Built to demonstrate end to end ML pipeline building. <br>
+Built to demonstrate end to end ML pipeline building. <br> <br>
+
+IMPORTANT NOTE: Render and Streamlit do not have 100% uptime, there is a spin up period when first accessed after the services not being used 
+for some amount of time. If it has been awhile since this was last accessed, you should check the API Docs link first and wait for it to
+spin up, then the streamlit dashboard will work. <br> <br>
 
 Live App- https://ml-cloud-deployment-k2fwxevsfqmj4ggkcqueaf.streamlit.app/ <br>
 API- https://ml-cloud-deployment-zjo4.onrender.com/ <br>
