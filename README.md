@@ -1,7 +1,10 @@
-# ML Cloud Deployment
-first ML cloud project
+# ML Cloud Deployment - Predictive Maintanence
 
-database hosted on Supabase https://supabase.com/
-ml model hosted on DagsHub with Mlflow integration https://dagshub.com/
-rest API hosted on Render https://render.com/
-dashboard built with streamlit https://streamlit.io/
+A full stack, cloud deployed machine learning application that predicts equipment failure from sensor readings. 
+Built to demonstrate end to end ML pipeline building. <br>
+
+Live App- https://ml-cloud-deployment-k2fwxevsfqmj4ggkcqueaf.streamlit.app/ <br>
+API- https://ml-cloud-deployment-zjo4.onrender.com/ <br>
+
+What does it do? <br> <br>
+A user enters a set of sensor readings: <br>
